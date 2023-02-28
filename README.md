@@ -20,7 +20,7 @@ The `graph.txt` file contains a directed flow graph $G$ with $n$ vertices and $m
 - A reducible flow graph G = (V, E, r) is a flow graph that can be reduced to the graph consisting of the single vertex r and no edges by means of the following transformations: 
   - T1 (Remove a loop): If e is an edge such that h(e) = t(e), delete edge e. 
   - T2 (Remove a vertex): If w # r is a vertex such that all edges e with t(e) = w have h(e) = v for some vertex v, contract w into v by deleting w and all edges entering w, and converting any edge e with h(e) = w into an edge e' with h(e') = v and t(e') = t(e).
-![Example graph](https://github.com/KerimKochekov/Tarjan_path_problems/blob/main/bin/example_graph.png)
+<img src="https://github.com/KerimKochekov/Tarjan_path_problems/blob/main/bin/example_graph.png" width="50%" height="auto" style="text-align:center" alt="example graph">
 
 **Notes from paper:**
 - For dense graphs the time bound is O(n^3 + m) and the space bound is O(n^2). (Note that m, the number of edges, is bounded by n 2 unless the graph contains multiple edges.)
