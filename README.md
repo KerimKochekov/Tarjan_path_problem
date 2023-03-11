@@ -1,11 +1,11 @@
 # Fast algorithm for solving path problems
 Implementation of [Tarjan's 1981 paper](https://dl.acm.org/doi/pdf/10.1145/322261.322273) for "Computing Path Expressions for Reducible Flow Graphs"
 
-**Abstract:**
+** Abstract: **
 
 ** Let G=(V, E) be a directed graph with a distinguished source vertex s. The single-source path expression problem is to find, for each vertex v, a regular expression P(s, v) which represents the set of all paths in G from s to v.
 
-**How to run?**
+** How to run?**
 ```
 $ g++ main.cpp -std=c++17 -o main
 $ ./main
