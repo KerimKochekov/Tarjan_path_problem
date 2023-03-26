@@ -13,7 +13,7 @@ $ ./main
 
 **Input:**
 
-The `graph.txt` file contains a directed flow graph $G$ with $n$ vertices and $m$ edges. The first line of the file given two integers of $n$ and $m$. Following $m$ lines given directed edges in form $u v$, where $0 \le u \neq v \le n$.
+The `graph.txt` file contains a directed flow graph $G$ with $n$ vertices and $m$ edges with source $s$. The first line of the file given three integers of $n$, $m$, $s$. Following $m$ lines given directed edges in form $u v$, where $0 \le u \neq v \le n$.
 
 **Definitions:**
 - A flow graph G = (V, E, r) is a directed graph with a distinguished start vertex r such that every vertex in G Is reachable from r.
@@ -23,5 +23,4 @@ The `graph.txt` file contains a directed flow graph $G$ with $n$ vertices and $m
 <img src="https://github.com/KerimKochekov/Tarjan_path_problems/blob/main/bin/example_graph.png" width="50%" height="auto" style="text-align:center" alt="example graph">
 
 **Notes from paper:**
-- For dense graphs the time bound is O(n^3 + m) and the space bound is O(n^2). (Note that m, the number of edges, is bounded by n 2 unless the graph contains multiple edges.)
-- Flow graph is reducible if every cycle has a single entry from the start vertex.
+- Flow graph is reducible if every cycle has a single entry from the start vertex or the flow graph's all dominator strong components are single vertices.
