@@ -24,7 +24,10 @@ public:
 		if ((L == NULL or R == NULL) and eId != STAR)
 			return;
 		if (eId == PLUS){
-			if (L -> eId == ZERO)	
+			if (L -> to_string() == R -> to_string()){
+				copy(L);
+			}
+			else if (L -> eId == ZERO)	
 				copy(R);
 			else if (R -> eId == ZERO)
 				copy(L);
@@ -86,6 +89,56 @@ public:
 		return os;
 	}
 
+	string eId_to_string(){
+		int x = eId;
+		assert (x >= 0);
+		if (x == 0)
+			return "e0";
+		string res;
+		while (x > 0){
+			res += (x%10) + '0';
+			x /= 10;
+		}
+		reverse(all(res));
+		return "e" + res;
+	}
+	string to_string(){
+		if (eId == ZERO)
+			return "0";
+		else if (eId == ONE)
+			return "1";
+		else if (eId == PLUS){
+			if (L == NULL and R != NULL)
+				return R -> to_string();
+			else if (L != NULL and R == NULL)
+				return L -> to_string();
+			else 
+				return "(" + L -> to_string() + " + " + R -> to_string() + ")";
+		}
+			
+		else if (eId == DOT){
+			if (L == NULL and R != NULL)
+				return R -> to_string();
+			else if (L != NULL and R == NULL)
+				return L -> to_string();
+			else{
+				assert(L -> eId != ONE);
+				return  "(" + L -> to_string() + " . " + R -> to_string() + ")";
+			}
+		}
+		else if (eId == STAR){
+			if (L != NULL){
+				if ((L -> eId == PLUS or L -> eId == DOT) 
+					and L -> L != NULL and L -> R != NULL)
+					return L -> to_string() + "*";
+				else
+					return "(" + L -> to_string() + ")*";
+			}
+		}
+		else
+			return eId_to_string();
+		return "";
+	}
 };
 
 
