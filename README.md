@@ -24,3 +24,6 @@ The `graph.txt` file contains a directed flow graph $G$ with $n$ vertices and $m
 
 **Notes from paper:**
 - Flow graph is reducible if every cycle has a single entry from the start vertex or the flow graph's all dominator strong components are single vertices.
+
+Here is the derived graph of G with the help of dominator decomposition.
+<img src="https://github.com/KerimKochekov/Tarjan_path_problems/blob/main/bin/example_graph.png" width="50%" height="auto" style="text-align:center" alt="Derived graph">
