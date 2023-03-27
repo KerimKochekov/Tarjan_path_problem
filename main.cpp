@@ -261,10 +261,10 @@ class Tarjan{
             RegEx* Q = new RegEx(RegEx::ZERO);
             for (auto e: noncycle[v])
                 P = new RegEx(RegEx::PLUS, P, 
-                    new RegEx(RegEx::DOT, eval(h[e]).ff, new RegEx(e)));
+                    new RegEx(RegEx::DOT, eval(h[e]).ff, get_edge(e)));
             for (auto e: cycle[v])
                 Q = new RegEx(RegEx::PLUS, Q, 
-                    new RegEx(RegEx::DOT, eval(h[e]).ff, new RegEx(e)));
+                    new RegEx(RegEx::DOT, eval(h[e]).ff, get_edge(e)));
             update(header[v], v, new RegEx(RegEx::DOT, P, new RegEx(RegEx::STAR, Q, nullptr)));
         }
         // finalize
@@ -272,7 +272,7 @@ class Tarjan{
         P[source] = new RegEx(RegEx::ZERO);
         for (auto e: cycle[source])
             P[source] = new RegEx(RegEx::PLUS, P[source], 
-                    new RegEx(RegEx::DOT, eval(h[e]).ff, new RegEx(e)));
+                    new RegEx(RegEx::DOT, eval(h[e]).ff, get_edge(e)));
         P[source] = new RegEx(RegEx::STAR, P[source], nullptr);
         for (int i = 0; i < n - 1; i++)
             P[order[i]] = new RegEx(RegEx::DOT, P[source], eval(order[i]).ff);
@@ -286,12 +286,12 @@ class Tarjan{
         pair<RegEx*, int> parent = eval_and_compress(ancestor[v], e);
         ancestor[v] = parent.ss;
         S[v] = new RegEx(RegEx::DOT, parent.ff, S[v]);
-        sequence.push_back(PathSequence(new RegEx(RegEx::DOT, S[v], new RegEx(e)), v, t[e]));
+        sequence.push_back(PathSequence(new RegEx(RegEx::DOT, S[v], get_edge(e)), v, t[e]));
         return mp(S[v], ancestor[v]);
     }
 
     RegEx* eval_and_sequence(int e){
-        return new RegEx(RegEx::DOT, eval_and_compress(h[e], e).ff, new RegEx(e));
+        return new RegEx(RegEx::DOT, eval_and_compress(h[e], e).ff, get_edge(e));
     }
 
     void reduce_and_sequence(bool show = false){
@@ -505,7 +505,10 @@ class Tarjan{
                 dfs2(v, comp);
     }
     
-    //
+    RegEx* get_edge(int e){
+        return new RegEx((((ll)(h[e])) << 32) | t[e]);
+    }
+
     bool is_reducible(){
         for (auto scc: SCC)
             if (scc.size() > 1)
@@ -541,7 +544,7 @@ class Tarjan{
             for (auto v: children[u]){
                 R[v] = new RegEx(RegEx::ZERO);
                 for (auto e: tree[v])
-                    R[v] = new RegEx(RegEx::PLUS, R[v], new RegEx(e)); //not sure about e
+                    R[v] = new RegEx(RegEx::PLUS, R[v], get_edge(e)); 
             }
             for (auto path: Yu){
                 int w = path.getU();
@@ -601,8 +604,8 @@ int main(){
         edges.pb(mp(u, v));
     }
     Tarjan T;
-    T.get_answer(n, m , r, edges);
-
+    T.show_answer(T.get_answer(n, m , r, edges), "test");
+    exit(0);
     //Check the given graph is flow graph from given source
     T.confirm();
 
