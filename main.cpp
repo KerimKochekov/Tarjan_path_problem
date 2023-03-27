@@ -225,7 +225,7 @@ class Tarjan{
     void eleminate_test(bool show = false){
         vector<pair<PII,RegEx*> > edges;
         for (int i = 1; i <= m; i++)
-            edges.pb(mp(mp(h[i],t[i]), new RegEx(i)));
+            edges.pb(mp(mp(h[i],t[i]), get_edge(i)));
         sequence = eleminate(edges);
         if (show)
             show_answer(solve(source), "ELEMINATE");
@@ -604,7 +604,7 @@ int main(){
         edges.pb(mp(u, v));
     }
     Tarjan T;
-    T.show_answer(T.get_answer(n, m , r, edges), "test");
+    T.get_answer(n, m , r, edges);
     exit(0);
     //Check the given graph is flow graph from given source
     T.confirm();
