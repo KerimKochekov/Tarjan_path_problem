@@ -68,7 +68,7 @@ class Tarjan{
     }
     
     public:
-    Tarjan(int _n, int _m, int _source){
+    void initiate(int _n, int _m, int _source){
         n = _n;
         m = _m;
         source = _source;
@@ -95,6 +95,17 @@ class Tarjan{
         idom.assign(n + 1, 0);
         depth.assign(n + 1, 0);
         id.assign(n + 1, 0);
+    }
+
+    vector<RegEx*> get_answer(int _n, int _m, int _source, vector<pair<int,int> > edges){
+        initiate(_n, _m, _source);
+        //make index one-based
+        for (int i = 0; i < m; i++)
+            add_edge(edges[i].ff, edges[i].ss, i + 1);
+        confirm();
+        compute();
+        decompose_and_sequence();
+        return solve(source);
     }
 
     void add_edge(int u, int v, int i){
@@ -375,13 +386,14 @@ class Tarjan{
             reachable(e.ff);
     }
 
-    bool confirm(){
+    void confirm(){
         vis.assign(n + 1, 0);
         reachable(source);
         for (int i = 1; i <= n; i++)
-            if (!vis[i])
-                return false;
-        return true;
+            if (!vis[i]){
+                puts("Your source node is invalid, choose different source to achieve flow graph");
+                exit(1);
+            }
     }
 
     void give_id(int nd){
@@ -582,20 +594,20 @@ int main(){
     scanf("%d%d%d", &n, &m, &r);
     assert(1 <= n);
     assert(1 <= r and r <= n);
-    Tarjan T(n, m, r);
+    vector<PII> edges;
     for (int i = 1; i <= m; i++){
         int u, v;
         scanf("%d%d", &u, &v);
-        T.add_edge(u, v, i);
+        edges.pb(mp(u, v));
     }
+    Tarjan T;
+    T.get_answer(n, m , r, edges);
+
     //Check the given graph is flow graph from given source
-    if(!T.confirm()){
-        puts("Your source node is invalid, choose different source to achieve flow graph");
-        return 1;
-    }
+    T.confirm();
 
     /* Naive O(n^3) algorithm test */
-    T.eleminate_test(true);
+    T.eleminate_test();
 
     /* 
         Compute the Dominator tree along with SCC on siblings sets in O(NM) time
@@ -617,5 +629,5 @@ int main(){
         5. Decomposition using Dominators in O(m log n + t),
         where t is the time to find path sequences for the dominator strong components of G.
     */
-    T.decompose_and_sequence(true);
+    T.decompose_and_sequence();
 }
