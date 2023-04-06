@@ -247,9 +247,11 @@ class Tarjan{
     //SCC dfs's
     void dfs1(int u){
         vis[u] = true;
-        for (auto v: G[u])
+        for (auto e: G[u]){
+            int v = t[e];
             if (!vis[v])
                 dfs1(v);
+        }
         sccOrder.pb(u);
     }
     
@@ -469,5 +471,5 @@ int main(){
         edges.pb(mp(u, v));
     }
     Tarjan T(n, m, edges);
-    cout << *T.query(1, 4) << "\n";
+    cout << *T.query(1, 2) << "\n";
 }
