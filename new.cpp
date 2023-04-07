@@ -40,9 +40,9 @@ class Tarjan{
     vector<PathSequence> sequence;
     vector<vector<PII> > adj;
     vector<vector<int> > anc, children, tree, nontree, sibling;
-    vector<vector<int> > G, G_inv, SCC;
+    vector<vector<int> > G, G_inv;
     vector<int> vis, idom, depth, h, t, reach;
-    vector<int> topid, id, sccOrder, sccId, reach_edges;
+    vector<int> id, sccOrder, sccId, reach_edges;
     vector<vector<int> > D;
 
     vector<vector<pair<vector<pair<pair<int,int>,int>>,
@@ -76,11 +76,9 @@ class Tarjan{
         nontree.assign(n + 1, vector<int>());
         G.assign(n + 1, vector<int>());
         G_inv.assign(n + 1, vector<int>());
-        SCC.clear();
         idom.assign(n + 1, 0);
         depth.assign(n + 1, 0);
         id.assign(n + 1, 0);
-        topid.assign(n + 1, 0);
         reach.clear();
         reach_edges.clear();
         Pt.assign(n + 1, nullptr);
@@ -92,20 +90,39 @@ class Tarjan{
             add_edge(edges[i].ff, edges[i].ss, i + 1);
     }
 
+    void clearing(){
+        // Clear structures
+        reach.pb(0);
+        for (auto v: reach){
+            depth[v] = 0;
+            anc[v].clear();
+            tree[v].clear();
+            nontree[v].clear();
+            children[v].clear();
+            sibling[v].clear();
+            SC[v].clear();
+        }
+        reach.clear();
+        reach_edges.clear();
+    }
+
     RegEx* query(int u, int v){
         source = u;
         reachable(source);
-        bool not_reachable = !vis[v];
+        bool reachable = vis[v];
         for (auto w: reach)
             vis[w] = 0;
-        if (not_reachable)
-            return new RegEx(RegEx::ZERO);
-        compute();
-        decompose_and_sequence();
-        solve();
-        // If you want to print answer for all reachable nodes
-        // show_answer();
-        return Pt[v];
+        RegEx* answer = new RegEx(RegEx::ZERO);
+        if (reachable){
+            compute();
+            decompose_and_sequence();
+            solve();
+            // If you want to print answer for all reachable nodes
+            // show_answer();
+            answer = Pt[v];
+        }
+        clearing();
+        return answer;
     }
 
     void add_edge(int u, int v, int i){
@@ -320,7 +337,7 @@ class Tarjan{
                     if (is_ancestor(u, h[e]))
                         sibling[u].pb(e);
             }
-        }
+        }        
 
         //compute SCC for each sibling set
         vector<int> comp;
@@ -350,7 +367,6 @@ class Tarjan{
                     for (auto r: comp)
                         sccId[r] = SCCL.size();
                     SCCL.pb(comp);
-                    SCC.pb(comp);
                 }
             // Topological sorting on SCC transformed graph
             int nl = SCCL.size();
@@ -471,5 +487,7 @@ int main(){
         edges.pb(mp(u, v));
     }
     Tarjan T(n, m, edges);
-    cout << *T.query(1, 2) << "\n";
+    // for (int i = 1; i <=n; i++)
+    //     for (int j = 1; j <= n; j++)
+    //         cout << i << " " << j << " " <<*T.query(i, j) << "\n";
 }
