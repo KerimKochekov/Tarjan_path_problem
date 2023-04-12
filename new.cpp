@@ -27,6 +27,124 @@ class PathSequence{
     }
 };
 
+class DominatorTree{
+    private:
+    int T;
+    vector<vector<int> > g, tree, rg, bucket;
+    vector<int> sdom, par, dom, dsu, label;
+    vector<int> arr, rev, idom, in, out;
+
+    void dfs0(int u){
+        T += 1;
+        arr[u] = T;
+        rev[T] = u;
+        label[T] = sdom[T] = dsu[T] = T;
+        for (auto w: g[u]){
+            if (!arr[w])
+                dfs0(w), par[arr[w]] = arr[u];
+            rg[arr[w]].pb(arr[u]);
+        }
+    }
+
+    void dfs1(int u){
+        in[u] = ++T;
+        for (auto w: tree[u])
+            dfs1(w);
+        out[u] = T;
+    }
+    int Find(int u, int x=0){
+        if (u == dsu[u]){
+            if (x) return -1;
+            return u;
+        }
+        int v = Find(dsu[u], x + 1);
+        if (v < 0) 
+            return u;
+        if(sdom[label[dsu[u]]] < sdom[label[u]])
+            label[u] = label[dsu[u]];
+        dsu[u] = v;
+        return x ? v: label[u];
+    }
+
+    void Union(int u, int v){
+        dsu[v] = u;
+    }
+
+    public:
+    DominatorTree(){}
+    DominatorTree(int n, vector<pair<int,int> > edges){
+        g.assign(n+1, vector<int>()); //no need
+        tree.assign(n+1, vector<int>()); //done
+        rg.assign(n+1, vector<int>()); //done
+        bucket.assign(n+1, vector<int>()); //done
+        arr.assign(n+1, 0); //done
+        label.assign(n+1, 0); //done
+        sdom.assign(n+1, 0); //done
+        dsu.assign(n+1, 0); //done
+        idom.assign(n+1, 0); //done
+        rev.assign(n+1, 0); //done
+        dom.assign(n+1, 0); //done
+        par.assign(n+1, 0); //done
+        in.assign(n+1, 0); //done
+        out.assign(n+1, 0); //done
+        for (auto edge: edges)
+            g[edge.ff].pb(edge.ss);
+    }
+
+    void build(vector<int>reach){
+        T = 0;
+        int source = reach[0];
+        dfs0(source);
+        int n = T;
+        for (int i = n; i >= 1; i--){
+            for (auto x: rg[i])
+                sdom[i] = min(sdom[i], sdom[Find(x)]);
+            if (i > 1)
+                bucket[sdom[i]].pb(i);
+            for (auto w: bucket[i]){
+                int v = Find(w);
+                if (sdom[v] == sdom[w])
+                    dom[w] = sdom[w];
+                else
+                    dom[w] = v;
+            }
+            if (i > 1)
+                Union(par[i], i);
+        }
+        for (int i = 2; i <= n; i++)
+            if (sdom[i] != dom[i])
+                dom[i] = dom[dom[i]];
+        idom[rev[1]] = 0;
+        for (int i = 2; i <= n; i++)
+            idom[rev[i]] = rev[dom[i]]; 
+            
+        //clearning
+        for (int i = 1; i <= n; i++){
+            rg[i].clear();
+            bucket[i].clear();
+            label[i] = rev[i] = dom[i] = 0;
+            sdom[i] = dsu[i] = arr[i] = par[i] = 0;
+        }
+        for (auto v: reach)
+            if (v != source)
+                tree[idom[v]].pb(v);
+        T = 0;
+        dfs1(source);
+        for (auto v: reach){
+            arr[v] = 0;
+            tree[v].clear();
+        }
+    }
+
+    int get_idom(int x){
+        return idom[x];
+    }
+    
+    bool is_ancestor(int u, int v){
+        return (in[u] <= in[v] and out[v] <= out[u]);
+    }
+};
+
 class Tarjan{
     private:
     int n, m, T, source;
@@ -39,11 +157,12 @@ class Tarjan{
     vector<RegEx*> S;
     vector<PathSequence> sequence;
     vector<vector<PII> > adj;
-    vector<vector<int> > anc, children, tree, nontree, sibling;
+    vector<vector<int> > children, tree, nontree, sibling;
     vector<vector<int> > G, G_inv;
-    vector<int> vis, idom, depth, h, t, reach;
+    vector<int> vis, h, t, reach;
     vector<int> id, sccOrder, sccId, reach_edges;
     vector<vector<int> > D;
+    DominatorTree DT;
 
     vector<vector<pair<vector<pair<pair<int,int>,int>>,
                 vector<pair<pair<int,int>,int>> > >> SC;
@@ -70,14 +189,14 @@ class Tarjan{
         t.assign(m + 1, 0);
         adj.assign(n + 1, vector<PII>());
         sibling.assign(n+1, vector<int>());
-        anc.assign(n + 1, vector<int>());
+        // anc.assign(n + 1, vector<int>());
         children.assign(n + 1, vector<int>());
         tree.assign(n + 1, vector<int>());
         nontree.assign(n + 1, vector<int>());
         G.assign(n + 1, vector<int>());
         G_inv.assign(n + 1, vector<int>());
-        idom.assign(n + 1, 0);
-        depth.assign(n + 1, 0);
+        // idom.assign(n + 1, 0);
+        // depth.assign(n + 1, 0);
         id.assign(n + 1, 0);
         reach.clear();
         reach_edges.clear();
@@ -85,7 +204,7 @@ class Tarjan{
         D.assign(n + 1, vector<int>());
         SC.assign(n + 1, vector<pair<vector<pair<pair<int,int>,int>>,
                               vector<pair<pair<int,int>,int>> >>());
-        
+        DT = DominatorTree(n, edges);
         for (int i = 0; i < m; i++)
             add_edge(edges[i].ff, edges[i].ss, i + 1);
     }
@@ -94,8 +213,6 @@ class Tarjan{
         // Clear structures
         reach.pb(0);
         for (auto v: reach){
-            depth[v] = 0;
-            anc[v].clear();
             tree[v].clear();
             nontree[v].clear();
             children[v].clear();
@@ -118,7 +235,7 @@ class Tarjan{
             decompose_and_sequence();
             solve();
             // If you want to print answer for all reachable nodes
-            // show_answer();
+                // show_answer();
             answer = Pt[v];
         }
         clearing();
@@ -283,58 +400,27 @@ class Tarjan{
     RegEx* get_edge(int e){
         return new RegEx((((ll)(h[e])) << 32) | t[e]);
     }
-    
-    bool is_ancestor(int u, int v){
-        if (u == v)
-            return true;
-        for (auto x: anc[v])
-            if (x == u)
-                return true;
-        return false;
-    }
 
     void compute(){
+        DT.build(reach);
         for (auto v: reach)
-            if (source != v){
-                vis[v] = 1;
-                dfs0(source);
-                for (auto i: reach){
-                    if (!vis[i]){
-                        anc[i].pb(v);
-                        depth[i] += 1;
-                    }
-                    else    
-                        vis[i] = 0;
-                }
-            }
-        for (auto v: reach)
-            if (v != source){
-                int mx = -1;
-                idom[v] = source;
-                for (auto nd: anc[v])
-                    if (depth[nd] > mx)
-                        mx = depth[nd], idom[v] = nd;
-            }
-        idom[source] = 0;
-        for (auto v: reach)
-            children[idom[v]].pb(v);
+            children[DT.get_idom(v)].pb(v);
         for (auto e: reach_edges){
             int u = t[e];
-            if (h[e] == idom[u])
+            if (h[e] == DT.get_idom(u))
                 tree[u].pb(e);
             else
                 nontree[u].pb(e);
         }
         T = n;
         give_id(0);
-
         //get derived graph
         for (auto e: reach_edges){
             if (t[e] == source)
                 sibling[source].pb(e);
-            else if (h[e] != idom[t[e]]){
-                for (auto u: children[idom[t[e]]])
-                    if (is_ancestor(u, h[e]))
+            else if (h[e] != DT.get_idom(t[e])){
+                for (auto u: children[DT.get_idom(t[e])])
+                    if (DT.is_ancestor(u, h[e]))
                         sibling[u].pb(e);
             }
         }        
@@ -487,6 +573,7 @@ int main(){
         edges.pb(mp(u, v));
     }
     Tarjan T(n, m, edges);
+    cout<<*T.query(1, 2)<<endl;
     // for (int i = 1; i <=n; i++)
     //     for (int j = 1; j <= n; j++)
     //         cout << i << " " << j << " " <<*T.query(i, j) << "\n";
