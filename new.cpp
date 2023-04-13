@@ -52,6 +52,7 @@ class DominatorTree{
             dfs1(w);
         out[u] = T;
     }
+    
     int Find(int u, int x=0){
         if (u == dsu[u]){
             if (x) return -1;
@@ -91,7 +92,7 @@ class DominatorTree{
             g[edge.ff].pb(edge.ss);
     }
 
-    void build(vector<int>reach){
+    void build(vector<int>&reach){
         T = 0;
         int source = reach[0];
         dfs0(source);
@@ -152,7 +153,24 @@ class Tarjan{
     vector<int> out;
     vector<int> order, decompose_order, ancestor;
     vector<RegEx*> Pt;
+
+    vector<RegEx*> ptrs;
+
+    RegEx* getptr(int t, RegEx* L = nullptr, RegEx* R = nullptr){
     
+        RegEx* gen = nullptr;
+        if (t == RegEx::ZERO or t == RegEx::ONE or t == RegEx::PROJECT)
+            gen = new RegEx(t);
+        if (t == RegEx::STAR)
+            gen = new RegEx(t, L, nullptr);
+        if (t == RegEx::PLUS or t == RegEx::DOT)
+            gen = new RegEx(t, L, R);
+        if (t >= 0)
+            gen = new RegEx(t);
+        ptrs.pb(gen);
+        return gen;
+    }   
+
     vector<vector<RegEx*> > p;
     vector<RegEx*> S;
     vector<PathSequence> sequence;
@@ -166,15 +184,7 @@ class Tarjan{
 
     vector<vector<pair<vector<pair<pair<int,int>,int>>,
                 vector<pair<pair<int,int>,int>> > >> SC;
-    
-    void print_adj_graph(){
-        for (int i = 1; i <= n; i++){
-            for (auto to: adj[i])
-                cout << i << " "<< to.ff << " "<<to.ss<<endl;
-        }
-        cout<<"-------------------(adj)-----------------"<<endl;
-    }
-    
+
     public:
     Tarjan(int _n, int _m, vector<pair<int,int> > edges){
         n = _n;
@@ -209,6 +219,7 @@ class Tarjan{
             add_edge(edges[i].ff, edges[i].ss, i + 1);
     }
 
+
     void clearing(){
         // Clear structures
         reach.pb(0);
@@ -219,8 +230,21 @@ class Tarjan{
             sibling[v].clear();
             SC[v].clear();
         }
+
+        sort(ptrs.begin(), ptrs.end());
+        int sz = ptrs.size(), j, i =0;
+        while (i < sz){
+            j = i;
+            while (ptrs[i] == ptrs[j])
+                j += 1;
+            delete ptrs[i];
+            i = j;
+        }
+
         reach.clear();
         reach_edges.clear();
+        sequence.clear();
+        ptrs.clear();
     }
 
     RegEx* query(int u, int v){
@@ -229,7 +253,7 @@ class Tarjan{
         bool reachable = vis[v];
         for (auto w: reach)
             vis[w] = 0;
-        RegEx* answer = new RegEx(RegEx::ZERO);
+        RegEx* answer = getptr(RegEx::ZERO);
         if (reachable){
             compute();
             decompose_and_sequence();
@@ -238,7 +262,6 @@ class Tarjan{
                 // show_answer();
             answer = Pt[v];
         }
-        clearing();
         return answer;
     }
 
@@ -249,17 +272,17 @@ class Tarjan{
 
     // Algorithm starts here
     void solve(){
-        Pt[source] = new RegEx(RegEx::ONE);
+        Pt[source] = getptr(RegEx::ONE);
         for (auto v: reach)
             if (v != source)
-                Pt[v] = new RegEx(RegEx::ZERO);
+                Pt[v] = getptr(RegEx::ZERO);
         for (auto seq: sequence){
             int v = seq.getU();
             int w = seq.getV();
             if (v == w)
-                Pt[v] = new RegEx(RegEx::DOT, Pt[v], seq.getP());
+                Pt[v] = getptr(RegEx::DOT, Pt[v], seq.getP());
             else
-                Pt[w] = new RegEx(RegEx::PLUS, Pt[w], new RegEx(RegEx::DOT, Pt[v], seq.getP()));
+                Pt[w] = getptr(RegEx::PLUS, Pt[w], getptr(RegEx::DOT, Pt[v], seq.getP()));
         }
     }
 
@@ -277,7 +300,7 @@ class Tarjan{
         puts("--------------------------");
     }
 
-    vector<PathSequence> eleminate(vector<pair<PII,RegEx*> > edges){
+    vector<PathSequence> eleminate(vector<pair<PII,RegEx*> > &edges){
         if (edges.empty())
             return {};
         map<int, int> id, who;
@@ -299,21 +322,21 @@ class Tarjan{
         p.assign(vertices, vector<RegEx*>(vertices, NULL));
         for (int v = 0; v < vertices; v++)
             for (int w = 0; w < vertices; w++)
-                p[v][w] = new RegEx(RegEx::ZERO);
+                p[v][w] = getptr(RegEx::ZERO);
         for (auto edge: edges){
             int u = id[edge.ff.ff];
             int v = id[edge.ff.ss];
-            p[u][v] = new RegEx(RegEx::PLUS, p[u][v], edge.ss);
+            p[u][v] = getptr(RegEx::PLUS, p[u][v], edge.ss);
         }
         for (int v = 0; v < vertices; v++){
-            p[v][v] = new RegEx(RegEx::STAR, p[v][v], nullptr);
+            p[v][v] = getptr(RegEx::STAR, p[v][v], nullptr);
             for (int u = v + 1; u < vertices; u++){
                 if (p[u][v] -> eId != RegEx::ZERO){
-                    p[u][v] = new RegEx(RegEx::DOT, p[u][v], p[v][v]);
+                    p[u][v] = getptr(RegEx::DOT, p[u][v], p[v][v]);
                     for (int w = v + 1; w < vertices; w++)
                         if (p[v][w] -> eId != RegEx::ZERO){
-                            p[u][w] = new RegEx(RegEx::PLUS, p[u][w], 
-                                new RegEx(RegEx::DOT, p[u][v], p[v][w]));
+                            p[u][w] = getptr(RegEx::PLUS, p[u][w], 
+                                getptr(RegEx::DOT, p[u][v], p[v][w]));
                         }
                 }   
             }
@@ -327,13 +350,14 @@ class Tarjan{
             for (int v = 0; v < u; v++)
                 if (p[u][v] -> eId != RegEx::ZERO)
                     Y.pb(PathSequence(p[u][v], who[u], who[v]));
+        p.clear();
         return Y;
     }
    
     void init(){
         for (auto v: reach){
             ancestor[v] = 0;
-            S[v] = new RegEx(RegEx::ONE);
+            S[v] = getptr(RegEx::ONE);
         }
     }
 
@@ -344,16 +368,16 @@ class Tarjan{
     
     pair<RegEx*, int> eval_and_compress(int v, int e){
         if (ancestor[v] == 0)
-            return mp(new RegEx(RegEx::ONE), v);
+            return mp(getptr(RegEx::ONE), v);
         pair<RegEx*, int> parent = eval_and_compress(ancestor[v], e);
         ancestor[v] = parent.ss;
-        S[v] = new RegEx(RegEx::DOT, parent.ff, S[v]);
-        sequence.push_back(PathSequence(new RegEx(RegEx::DOT, S[v], get_edge(e)), v, t[e]));
+        S[v] = getptr(RegEx::DOT, parent.ff, S[v]);
+        sequence.push_back(PathSequence(getptr(RegEx::DOT, S[v], get_edge(e)), v, t[e]));
         return mp(S[v], ancestor[v]);
     }
 
     RegEx* eval_and_sequence(int e){
-        return new RegEx(RegEx::DOT, eval_and_compress(h[e], e).ff, get_edge(e));
+        return getptr(RegEx::DOT, eval_and_compress(h[e], e).ff, get_edge(e));
     }
     
     void reachable(int nd){
@@ -398,7 +422,7 @@ class Tarjan{
     }
     
     RegEx* get_edge(int e){
-        return new RegEx((((ll)(h[e])) << 32) | t[e]);
+        return getptr((((ll)(h[e])) << 32) | t[e]);
     }
 
     void compute(){
@@ -502,7 +526,6 @@ class Tarjan{
 
     void decompose_and_sequence(){
         init();
-        sequence.clear();
         vector<pair<PII,RegEx*> >edges;
         vector<RegEx*> P(m + 1), R(n + 1);
         vector<int> decompose_order = reach;
@@ -510,18 +533,13 @@ class Tarjan{
             return id[x] < id[y];
         };
         sort(all(decompose_order), cmp);
+        vector<PathSequence> Yu;
         for (auto u: decompose_order){
             if (children[u].empty())
                 continue;
             for (auto v: children[u])
                 for (auto e: nontree[v])
                     P[e] = eval_and_sequence(e);
-            // edges.clear();
-            // for (auto v: children[u])
-            //     for (auto e: sibling[v])
-            //         edges.pb(mp(mp(v, t[e]), P[e])); 
-            // vector<PathSequence> Yu = eleminate(edges);
-            vector<PathSequence> Yu;
             for (auto comp: SC[u]){
                 edges.clear();
                 for (auto edge: comp.ff)
@@ -534,26 +552,27 @@ class Tarjan{
             for (auto path: Yu)
                 sequence.pb(path);
             for (auto v: children[u]){
-                R[v] = new RegEx(RegEx::ZERO);
+                R[v] = getptr(RegEx::ZERO);
                 for (auto e: tree[v])
-                    R[v] = new RegEx(RegEx::PLUS, R[v], get_edge(e)); 
+                    R[v] = getptr(RegEx::PLUS, R[v], get_edge(e)); 
             }
             for (auto path: Yu){
                 int w = path.getU();
                 int x = path.getV();
                 if (w == x)
-                    R[w] = new RegEx(RegEx::DOT, R[w], path.getP());
+                    R[w] = getptr(RegEx::DOT, R[w], path.getP());
                 else
-                    R[x] = new RegEx(RegEx::PLUS, R[x], new RegEx(RegEx::DOT, R[w], path.getP()));
+                    R[x] = getptr(RegEx::PLUS, R[x], getptr(RegEx::DOT, R[w], path.getP()));
             }
             for (auto v: children[u])
                 update(u, v, R[v]);
+            Yu.clear();
         }
-        RegEx* Q = new RegEx(RegEx::ZERO);
+        RegEx* Q = getptr(RegEx::ZERO);
         for (auto e: nontree[source])
-            Q = new RegEx(RegEx::PLUS, Q, eval_and_sequence(e));
+            Q = getptr(RegEx::PLUS, Q, eval_and_sequence(e));
         if (Q -> eId != RegEx::ONE and Q -> eId != RegEx::ZERO)
-            sequence.pb(PathSequence(new RegEx(RegEx::STAR, Q, nullptr), source, source));
+            sequence.pb(PathSequence(getptr(RegEx::STAR, Q, nullptr), source, source));
         for (int i = int(decompose_order.size()) - 2; i >= 0; i--){
             int v = decompose_order[i];
             sequence.pb(PathSequence(S[v], ancestor[v], v));
@@ -563,7 +582,9 @@ class Tarjan{
 
 
 int main(){
-    freopen("graph.txt", "r", stdin);
+    srand((unsigned)time(NULL));
+    // freopen("output.out", "r", stdin);
+    // freopen("graph.txt", "r", stdin);
     int n, m;
     scanf("%d%d", &n, &m);
     vector<PII> edges;
@@ -573,8 +594,14 @@ int main(){
         edges.pb(mp(u, v));
     }
     Tarjan T(n, m, edges);
-    cout<<*T.query(1, 2)<<endl;
-    // for (int i = 1; i <=n; i++)
-    //     for (int j = 1; j <= n; j++)
-    //         cout << i << " " << j << " " <<*T.query(i, j) << "\n";
+
+    T.query(1, rand()%n+1);
+    T.clearing();
+
+    // while (1){
+    //     int i = rand() % n + 1;
+    //     int j = rand() % n + 1;
+    //     RegEx* ans = T.query(i, j);
+    //     T.clearing();
+    // }
 }
