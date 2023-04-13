@@ -156,7 +156,7 @@ class Tarjan{
 
     vector<RegEx*> ptrs;
 
-    RegEx* getptr(int t, RegEx* L = nullptr, RegEx* R = nullptr){
+    RegEx* getptr(ll t, RegEx* L = nullptr, RegEx* R = nullptr){
     
         RegEx* gen = nullptr;
         if (t == RegEx::ZERO or t == RegEx::ONE or t == RegEx::PROJECT)
