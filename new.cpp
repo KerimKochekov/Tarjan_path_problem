@@ -219,6 +219,18 @@ class Tarjan{
             add_edge(edges[i].ff, edges[i].ss, i + 1);
     }
 
+    void clearPointers(){
+        sort(ptrs.begin(), ptrs.end());
+        int sz = ptrs.size(), j, i =0;
+        while (i < sz){
+            j = i;
+            while (ptrs[i] == ptrs[j])
+                j += 1;
+            delete ptrs[i];
+            i = j;
+        }
+        ptrs.clear();
+    }
 
     void clearing(){
         // Clear structures
@@ -231,20 +243,9 @@ class Tarjan{
             SC[v].clear();
         }
 
-        sort(ptrs.begin(), ptrs.end());
-        int sz = ptrs.size(), j, i =0;
-        while (i < sz){
-            j = i;
-            while (ptrs[i] == ptrs[j])
-                j += 1;
-            delete ptrs[i];
-            i = j;
-        }
-
         reach.clear();
         reach_edges.clear();
         sequence.clear();
-        ptrs.clear();
     }
 
     RegEx* query(int u, int v){
@@ -262,6 +263,7 @@ class Tarjan{
                 // show_answer();
             answer = Pt[v];
         }
+        clearing();
         return answer;
     }
 
@@ -596,7 +598,6 @@ int main(){
     Tarjan T(n, m, edges);
 
     T.query(1, rand()%n+1);
-    T.clearing();
 
     // while (1){
     //     int i = rand() % n + 1;
