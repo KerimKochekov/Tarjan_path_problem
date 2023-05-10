@@ -7,8 +7,8 @@ Implementation of [Tarjan's 1981 paper](https://dl.acm.org/doi/pdf/10.1145/32226
 
 ** How to run?**
 ```
-$ g++ main.cpp -std=c++17 -o main
-$ ./main
+$ g++ algorithm.cpp -std=c++17 -o algorithm
+$ ./algorithm
 ```
 
 **Input:**
